@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output (regenerate with `npm run build`)
+plan-bridge-mcp/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+test-app/
+
+# Plan storage (runtime data)
+.plan-bridge/
+
+# Auto-generated claude-mem context files (keep only root CLAUDE.md)
+**/CLAUDE.md
+!/CLAUDE.md

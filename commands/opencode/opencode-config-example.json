@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "mcp": {
+    "plan-bridge": {
+      "type": "local",
+      "command": [
+        "node",
+        "/absolute/path/to/plan-bridge-mcp/build/index.cjs"
+      ]
+    }
+  },
+
+  "command": {
+    "get-plan": {
+      "description": "Retrieve a plan from plan-bridge and implement it",
+      "template": "< paste contents of commands/opencode/get-plan.md here >"
+    },
+    "claude-review": {
+      "description": "Get review findings from Claude Code and fix them (auto-loops)",
+      "template": "< paste contents of commands/opencode/claude-review.md here >"
+    },
+    "mark-done": {
+      "description": "Force-mark a plan as completed",
+      "template": "< paste contents of commands/opencode/mark-done.md here >"
+    }
+  }
+}

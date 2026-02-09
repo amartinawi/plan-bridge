@@ -1,0 +1,32 @@
+{
+  "name": "plan-bridge-mcp",
+  "version": "1.0.0",
+  "description": "MCP bridge server for structured plan/implement/review workflows between AI coding agents",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-code",
+    "opencode",
+    "ai-workflow",
+    "code-review",
+    "plan-bridge"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs --out-dir build --clean",
+    "dev": "tsx src/index.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
