@@ -42,7 +42,7 @@ submitted --> in_progress --> review_requested --> needs_fixes --> review_reques
 
 ## How Plans Are Created and Saved
 
-Claude Code's **plan mode** saves plans as markdown files in `~/.claude/plans/`. These are the raw plan documents. When the user runs `/send-plan`, the plan content is:
+Claude Code's **plan mode** saves plans as markdown files in `~/.claude/plans/`. These are the raw plan documents. When the user runs `/plan-bridge:send-plan`, the plan content is:
 
 1. **Extracted from `~/.claude/plans/`** — reads the most recent `.md` file, or a specific one if a name/path argument is provided
 2. **Or from the conversation** — if a plan was just discussed inline
@@ -54,8 +54,8 @@ The plan JSON file is the **source of truth** for the workflow. The markdown fil
 
 The MCP server supports multiple plans for the same project. Plans are identified by UUID and can be filtered by `project_path`.
 
-- `/send-plan` checks for existing plans in the same project and warns the user
-- `/get-plan <plan-id>` in OpenCode retrieves a specific plan by ID
+- `/plan-bridge:send-plan` checks for existing plans in the same project and warns the user
+- `/plan-bridge:get-plan <plan-id>` in OpenCode retrieves a specific plan by ID
 - `list_plans` can filter by both `status` and `project_path`
 - Plan IDs are reported on submission — use them to reference specific plans
 
@@ -65,49 +65,49 @@ The review cycle is **fully automated** once triggered. No need to switch betwee
 
 **How it works:**
 
-1. User runs `/review-plan` in Claude Code (one time)
+1. User runs `/plan-bridge:review-plan` in Claude Code (one time)
 2. Claude Code reviews the code, submits findings
 3. Claude Code calls `wait_for_status` — polls the plan file every 5 seconds waiting for OpenCode to finish fixing
 4. Meanwhile, OpenCode (running `/claude-review`) gets the findings, fixes them, submits a fix report
 5. `wait_for_status` detects the status change, Claude Code automatically re-reviews
 6. Loop continues until 0 findings — plan is marked completed
 
-**Timeout:** `wait_for_status` has a default 5-minute timeout. If OpenCode takes longer, the loop stops and the user can re-trigger `/review-plan`.
+**Timeout:** `wait_for_status` has a default 5-minute timeout. If OpenCode takes longer, the loop stops and the user can re-trigger `/plan-bridge:review-plan`.
 
 ## Slash Commands (Claude Code)
 
 Located in `~/.claude/commands/` (copies in `commands/claude-code/`):
 
-- **`/send-plan [name]`** — Find a plan from `~/.claude/plans/` (or conversation), submit it via `submit_plan`. Reports the plan ID. Accepts optional argument to match a specific plan file name.
-- **`/review-plan [plan-id]`** — Fetch the latest `review_requested` plan, review the implementation, submit findings. **Auto-loops:** waits for fixes and re-reviews until 0 findings.
-- **`/full-cycle [name]`** — **Single-terminal orchestration.** Submits a plan, triggers OpenCode via `opencode run --command`, waits for implementation, reviews, triggers fixes, and loops until approved. No terminal switching needed.
+- **`/plan-bridge:send-plan [name]`** — Find a plan from `~/.claude/plans/` (or conversation), submit it via `submit_plan`. Reports the plan ID. Accepts optional argument to match a specific plan file name.
+- **`/plan-bridge:review-plan [plan-id]`** — Fetch the latest `review_requested` plan, review the implementation, submit findings. **Auto-loops:** waits for fixes and re-reviews until 0 findings.
+- **`/plan-bridge:full-cycle [name]`** — **Single-terminal orchestration.** Submits a plan, triggers OpenCode via `opencode run --command`, waits for implementation, reviews, triggers fixes, and loops until approved. No terminal switching needed.
 
 ## Slash Commands (OpenCode)
 
 Defined inline in `~/.config/opencode/opencode.json` under the `command` key (reference copies in `commands/opencode/`):
 
-- **`/get-plan [plan-id]`** — Fetch a submitted plan (latest or by ID), set to `in_progress`, implement it, then set `review_requested`.
-- **`/claude-review [plan-id]`** — Get review findings, apply fixes, submit fix report. **Auto-loops:** waits for re-review results and fixes again until approved.
-- **`/mark-done [plan-id]`** — Force-mark a plan as completed.
+- **`/plan-bridge:get-plan [plan-id]`** — Fetch a submitted plan (latest or by ID), set to `in_progress`, implement it, then set `review_requested`.
+- **`/plan-bridge:claude-review [plan-id]`** — Get review findings, apply fixes, submit fix report. **Auto-loops:** waits for re-review results and fixes again until approved.
+- **`/plan-bridge:mark-done [plan-id]`** — Force-mark a plan as completed.
 
 ## Typical Workflow
 
 ### Full-Cycle (Recommended — Single Terminal)
 1. Create a plan in Claude Code (plan mode or conversation)
-2. Run `/full-cycle` — everything is automatic:
+2. Run `/plan-bridge:full-cycle` — everything is automatic:
    - Submits the plan
-   - Triggers `opencode run --command get-plan <id>` in background
+   - Triggers `opencode run --command plan-bridge:get-plan <id>` in background
    - Waits for implementation via `wait_for_status`
    - Reviews the code, submits findings
-   - Triggers `opencode run --command claude-review <id>` in background
+   - Triggers `opencode run --command plan-bridge:claude-review <id>` in background
    - Waits for fixes, re-reviews, loops until 0 findings
    - Reports completion
 
 ### Two-Terminal Flow
-1. **Claude Code:** `/send-plan` → note plan ID
-2. **OpenCode:** `/get-plan <id>` → implements → sets review_requested
-3. **Claude Code:** `/review-plan` (starts auto-loop)
-4. **OpenCode:** `/claude-review` (starts auto-loop)
+1. **Claude Code:** `/plan-bridge:send-plan` → note plan ID
+2. **OpenCode:** `/plan-bridge:get-plan <id>` → implements → sets review_requested
+3. **Claude Code:** `/plan-bridge:review-plan` (starts auto-loop)
+4. **OpenCode:** `/plan-bridge:claude-review` (starts auto-loop)
 5. Both loops run concurrently — no further user intervention needed
 
 ## Development
@@ -129,7 +129,7 @@ After rebuilding, restart both Claude Code and OpenCode to pick up the new serve
 | `plan-bridge-mcp/src/tools.ts` | All 9 MCP tool definitions (including `wait_for_status`) |
 | `plan-bridge-mcp/src/index.ts` | Server entry point (McpServer + StdioServerTransport) |
 | `~/.claude/settings.json` | Claude Code global MCP server registration |
-| `commands/claude-code/*.md` | Claude Code slash commands (`send-plan`, `review-plan`, `full-cycle`) |
+| `commands/claude-code/*.md` | Claude Code slash commands (`plan-bridge:send-plan`, `plan-bridge:review-plan`, `plan-bridge:full-cycle`) |
 | `commands/opencode/*.md` | OpenCode slash commands + example config |
 | `~/.config/opencode/opencode.json` | OpenCode MCP server + inline slash commands (runtime) |
 | `~/.claude/commands/*.md` | Claude Code slash commands (installed copies, runtime) |

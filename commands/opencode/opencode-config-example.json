@@ -12,17 +12,17 @@
   },
 
   "command": {
-    "get-plan": {
+    "plan-bridge:get-plan": {
       "description": "Retrieve a plan from plan-bridge and implement it",
-      "template": "< paste contents of commands/opencode/get-plan.md here >"
+      "template": "< paste contents of commands/opencode/plan-bridge:get-plan.md here >"
     },
-    "claude-review": {
+    "plan-bridge:claude-review": {
       "description": "Get review findings from Claude Code and fix them (auto-loops)",
-      "template": "< paste contents of commands/opencode/claude-review.md here >"
+      "template": "< paste contents of commands/opencode/plan-bridge:claude-review.md here >"
     },
-    "mark-done": {
+    "plan-bridge:mark-done": {
       "description": "Force-mark a plan as completed",
-      "template": "< paste contents of commands/opencode/mark-done.md here >"
+      "template": "< paste contents of commands/opencode/plan-bridge:mark-done.md here >"
     }
   }
 }

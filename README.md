@@ -11,7 +11,7 @@ When building with AI, you often want one agent to plan and review while another
 Plan Bridge solves this with:
 - **Shared MCP server** — both agents read/write the same plan files
 - **Automated review loops** — agents poll for status changes, no manual intervention
-- **Single-terminal mode** — `/full-cycle` runs everything from one terminal
+- **Single-terminal mode** — `/plan-bridge:full-cycle` runs everything from one terminal
 
 ## Quick Start
 
@@ -63,17 +63,17 @@ Add to `~/.config/opencode/opencode.json`:
     }
   },
   "command": {
-    "get-plan": {
+    "plan-bridge:get-plan": {
       "description": "Retrieve a plan and implement it",
-      "template": "< contents of commands/opencode/get-plan.md >"
+      "template": "< contents of commands/opencode/plan-bridge:get-plan.md >"
     },
-    "claude-review": {
+    "plan-bridge:claude-review": {
       "description": "Get review findings and fix them (auto-loops)",
-      "template": "< contents of commands/opencode/claude-review.md >"
+      "template": "< contents of commands/opencode/plan-bridge:claude-review.md >"
     },
-    "mark-done": {
+    "plan-bridge:mark-done": {
       "description": "Force-mark a plan as completed",
-      "template": "< contents of commands/opencode/mark-done.md >"
+      "template": "< contents of commands/opencode/plan-bridge:mark-done.md >"
     }
   }
 }
@@ -88,14 +88,14 @@ See `commands/opencode/opencode-config-example.json` for the full example.
 The simplest way to use Plan Bridge — run everything from Claude Code:
 
 1. Create a plan in Claude Code (use plan mode or describe what you want)
-2. Run `/full-cycle`
+2. Run `/plan-bridge:full-cycle`
 
 That's it. Claude Code will:
 - Submit the plan
-- Trigger OpenCode to implement it (via `opencode run --command`)
+- Trigger OpenCode to implement it (via `opencode run --command plan-bridge:get-plan`)
 - Wait for implementation to complete
 - Review the code and submit findings
-- Trigger OpenCode to fix findings
+- Trigger OpenCode to fix findings (via `opencode run --command plan-bridge:claude-review`)
 - Re-review and loop until approved
 - Report completion
 
@@ -104,8 +104,8 @@ That's it. Claude Code will:
 For more control, run agents in separate terminals:
 
 ```
-Terminal 1 (Claude Code):    /send-plan → /review-plan
-Terminal 2 (OpenCode):       /get-plan <id> → /claude-review
+Terminal 1 (Claude Code):    /plan-bridge:send-plan → /plan-bridge:review-plan
+Terminal 2 (OpenCode):       /plan-bridge:get-plan <id> → /plan-bridge:claude-review
 ```
 
 Both auto-loop via `wait_for_status` — no further intervention needed.
@@ -116,17 +116,17 @@ Both auto-loop via `wait_for_status` — no further intervention needed.
 
 | Command | Description |
 |---------|-------------|
-| `/send-plan [name]` | Submit a plan from `~/.claude/plans/` or conversation |
-| `/review-plan [id]` | Review implementation, auto-loop until approved |
-| `/full-cycle [name]` | Full automation: submit + implement + review loop |
+| `/plan-bridge:send-plan [name]` | Submit a plan from `~/.claude/plans/` or conversation |
+| `/plan-bridge:review-plan [id]` | Review implementation, auto-loop until approved |
+| `/plan-bridge:full-cycle [name]` | Full automation: submit + implement + review loop |
 
 ### OpenCode (inline in `opencode.json`)
 
 | Command | Description |
 |---------|-------------|
-| `/get-plan [id]` | Fetch and implement a plan |
-| `/claude-review [id]` | Get findings, fix them, auto-loop until approved |
-| `/mark-done [id]` | Force-complete a plan |
+| `/plan-bridge:get-plan [id]` | Fetch and implement a plan |
+| `/plan-bridge:claude-review [id]` | Get findings, fix them, auto-loop until approved |
+| `/plan-bridge:mark-done [id]` | Force-complete a plan |
 
 ## MCP Tools
 
@@ -182,13 +182,13 @@ plan-bridge/
 ├── LICENSE
 ├── commands/
 │   ├── claude-code/             # Slash commands for Claude Code
-│   │   ├── send-plan.md
-│   │   ├── review-plan.md
-│   │   └── full-cycle.md
+│   │   ├── plan-bridge:send-plan.md
+│   │   ├── plan-bridge:review-plan.md
+│   │   └── plan-bridge:full-cycle.md
 │   └── opencode/                # Slash commands for OpenCode
-│       ├── get-plan.md
-│       ├── claude-review.md
-│       ├── mark-done.md
+│       ├── plan-bridge:get-plan.md
+│       ├── plan-bridge:claude-review.md
+│       ├── plan-bridge:mark-done.md
 │       └── opencode-config-example.json
 └── plan-bridge-mcp/             # MCP server source
     ├── src/

@@ -31,5 +31,5 @@ Retrieve and implement a plan from the plan-bridge MCP server.
 4. **Mark review_requested:**
    - Call `update_plan_status` with status "review_requested".
    - Tell the user: "Implementation complete. Plan status set to review_requested."
-   - If Claude Code has `/review-plan` running with auto-loop, it will pick this up automatically.
-   - Otherwise tell the user to run `/review-plan` in Claude Code.
+   - If Claude Code has `/plan-bridge:review-plan` running with auto-loop, it will pick this up automatically.
+   - Otherwise tell the user to run `/plan-bridge:review-plan` in Claude Code.

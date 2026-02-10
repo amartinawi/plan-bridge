@@ -41,7 +41,7 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
 4. **Run OpenCode in background:**
    - Execute this bash command in the background:
      ```
-     cd <project_path> && opencode run --command get-plan "<plan-id>"
+     cd <project_path> && opencode run --command plan-bridge:get-plan "<plan-id>"
      ```
    - Tell the user: "OpenCode is implementing the plan. Waiting for completion..."
 
@@ -77,7 +77,7 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
 9. **Trigger OpenCode to fix:**
    - Execute this bash command in the background:
      ```
-     cd <project_path> && opencode run --command claude-review "<plan-id>"
+     cd <project_path> && opencode run --command plan-bridge:claude-review "<plan-id>"
      ```
    - Tell the user: "OpenCode is fixing [N] findings. Waiting for fixes..."
 
