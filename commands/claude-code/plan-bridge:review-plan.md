@@ -34,7 +34,7 @@ Your task: review code that OpenCode has implemented based on a plan, and submit
    - Call `wait_for_status` MCP tool with:
      - `plan_id`: the plan ID
      - `target_status`: "review_requested"
-     - `timeout_seconds`: 300
+     - `timeout_seconds`: 1200
    - If the wait times out, tell the user and stop.
    - If the status changed to "review_requested", **go back to step 2** and re-review.
    - Repeat this loop until the review has 0 findings (approved).

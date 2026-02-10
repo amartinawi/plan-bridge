@@ -39,7 +39,7 @@ Your task: get review findings from Claude Code, apply fixes, and loop until app
    - Call `wait_for_status` with:
      - `plan_id`: the plan ID
      - `target_status`: "needs_fixes" (Claude found more issues)
-     - `timeout_seconds`: 300
+     - `timeout_seconds`: 1200
    - Check the result:
      - If plan status is "completed" → it was approved! Report: "Plan approved! All findings resolved." **Stop.**
      - If status is "needs_fixes" → **go back to step 2** and fix the new findings.

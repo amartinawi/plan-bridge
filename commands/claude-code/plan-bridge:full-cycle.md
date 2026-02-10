@@ -46,7 +46,7 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
    - Tell the user: "OpenCode is implementing the plan. Waiting for completion..."
 
 5. **Wait for implementation:**
-   - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 600.
+   - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 1800.
    - If timeout: tell the user "OpenCode timed out. Check the implementation status and retry."
    - If reached: tell the user "OpenCode finished implementing. Starting review..."
 
@@ -82,7 +82,7 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
    - Tell the user: "OpenCode is fixing [N] findings. Waiting for fixes..."
 
 10. **Wait for fixes:**
-    - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 600.
+    - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 1800.
     - If timeout: tell the user and stop.
     - If reached: tell the user "OpenCode finished fixing. Re-reviewing..."
 

@@ -30,6 +30,8 @@ export function registerTools(server: McpServer): void {
         fix_reports: [],
       };
       savePlan(plan);
+      console.error(`[plan-bridge] ✅ Plan submitted: ${plan.id} (${plan.name}) by ${plan.source}`);
+      console.error(`[plan-bridge] 📁 Project: ${plan.project_path}`);
       return {
         content: [
           {
@@ -118,9 +120,12 @@ export function registerTools(server: McpServer): void {
       if (!plan) {
         return { content: [{ type: "text" as const, text: "Plan not found." }] };
       }
+      const oldStatus = plan.status;
       plan.status = status as PlanStatus;
       plan.updated_at = new Date().toISOString();
       savePlan(plan);
+      console.error(`[plan-bridge] 🔄 Status changed: ${plan.name} (${plan.id})`);
+      console.error(`[plan-bridge]    ${oldStatus} → ${status}`);
       return {
         content: [
           {
@@ -158,6 +163,13 @@ export function registerTools(server: McpServer): void {
       plan.status = approved ? "completed" : "needs_fixes";
       plan.updated_at = new Date().toISOString();
       savePlan(plan);
+      if (approved) {
+        console.error(`[plan-bridge] ✅ Review approved: ${plan.name} (${plan.id})`);
+        console.error(`[plan-bridge] 🎉 Plan completed with 0 findings`);
+      } else {
+        console.error(`[plan-bridge] 🔍 Review submitted: ${plan.name} (${plan.id})`);
+        console.error(`[plan-bridge] ⚠️  ${findings.length} finding(s) - status: needs_fixes`);
+      }
       return {
         content: [
           {
@@ -231,6 +243,8 @@ export function registerTools(server: McpServer): void {
       plan.status = "review_requested";
       plan.updated_at = new Date().toISOString();
       savePlan(plan);
+      console.error(`[plan-bridge] 🔧 Fixes submitted: ${plan.name} (${plan.id})`);
+      console.error(`[plan-bridge] ✓ ${fixes_applied.length} fix(es) applied - requesting re-review`);
       return {
         content: [
           {
@@ -275,7 +289,7 @@ export function registerTools(server: McpServer): void {
   // --- wait_for_status ---
   server.tool(
     "wait_for_status",
-    "Poll a plan until it reaches the target status. Blocks up to timeout_seconds (default 300). Used to automate the review loop — one side waits for the other to finish.",
+    "Poll a plan until it reaches the target status. Blocks up to timeout_seconds (default 1200). Used to automate the review loop — one side waits for the other to finish.",
     {
       plan_id: z.string().describe("Plan ID to watch"),
       target_status: z
@@ -284,43 +298,62 @@ export function registerTools(server: McpServer): void {
       timeout_seconds: z
         .number()
         .optional()
-        .describe("Max seconds to wait (default 300)"),
+        .describe("Max seconds to wait (default 1200)"),
     },
     async ({ plan_id, target_status, timeout_seconds }) => {
-      const timeout = (timeout_seconds ?? 300) * 1000;
+      const timeout = (timeout_seconds ?? 1200) * 1000;
       const pollInterval = 5000;
       const startTime = Date.now();
+      const plan = loadPlan(plan_id);
+      if (!plan) {
+        return { content: [{ type: "text" as const, text: "Plan not found." }] };
+      }
 
+      console.error(`[plan-bridge] ⏳ Waiting for status: ${plan.name} (${plan.id})`);
+      console.error(`[plan-bridge]    Current: ${plan.status} → Target: ${target_status}`);
+      console.error(`[plan-bridge]    Timeout: ${timeout_seconds ?? 1200}s (polling every 5s)`);
+
+      let lastLoggedStatus = plan.status;
       while (Date.now() - startTime < timeout) {
-        const plan = loadPlan(plan_id);
-        if (!plan) {
+        const currentPlan = loadPlan(plan_id);
+        if (!currentPlan) {
           return { content: [{ type: "text" as const, text: "Plan not found." }] };
         }
-        if (plan.status === target_status) {
+
+        // Log status changes while waiting
+        if (currentPlan.status !== lastLoggedStatus) {
+          console.error(`[plan-bridge] 🔄 Status update: ${lastLoggedStatus} → ${currentPlan.status}`);
+          lastLoggedStatus = currentPlan.status;
+        }
+
+        if (currentPlan.status === target_status) {
+          const waitedSeconds = Math.round((Date.now() - startTime) / 1000);
+          console.error(`[plan-bridge] ✅ Target status reached after ${waitedSeconds}s`);
           return {
             content: [
               {
                 type: "text" as const,
                 text: JSON.stringify({
                   reached: true,
-                  plan_id: plan.id,
-                  status: plan.status,
-                  waited_seconds: Math.round((Date.now() - startTime) / 1000),
+                  plan_id: currentPlan.id,
+                  status: currentPlan.status,
+                  waited_seconds: waitedSeconds,
                 }),
               },
             ],
           };
         }
         // If plan is already completed, stop waiting
-        if (plan.status === "completed") {
+        if (currentPlan.status === "completed") {
+          console.error(`[plan-bridge] ⚠️  Plan already completed, stopping wait`);
           return {
             content: [
               {
                 type: "text" as const,
                 text: JSON.stringify({
                   reached: false,
-                  plan_id: plan.id,
-                  status: plan.status,
+                  plan_id: currentPlan.id,
+                  status: currentPlan.status,
                   message: "Plan already completed.",
                 }),
               },
@@ -329,13 +362,16 @@ export function registerTools(server: McpServer): void {
         }
         await new Promise((resolve) => setTimeout(resolve, pollInterval));
       }
+      const finalPlan = loadPlan(plan_id);
+      console.error(`[plan-bridge] ⏰ Timeout after ${timeout_seconds ?? 1200}s`);
+      console.error(`[plan-bridge]    Final status: ${finalPlan?.status}`);
       return {
         content: [
           {
             type: "text" as const,
             text: JSON.stringify({
               reached: false,
-              message: `Timeout after ${timeout_seconds ?? 300}s. Plan status is still: ${loadPlan(plan_id)?.status}`,
+              message: `Timeout after ${timeout_seconds ?? 1200}s. Plan status is still: ${finalPlan?.status}`,
             }),
           },
         ],

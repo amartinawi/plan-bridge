@@ -72,7 +72,7 @@ The review cycle is **fully automated** once triggered. No need to switch betwee
 5. `wait_for_status` detects the status change, Claude Code automatically re-reviews
 6. Loop continues until 0 findings — plan is marked completed
 
-**Timeout:** `wait_for_status` has a default 5-minute timeout. If OpenCode takes longer, the loop stops and the user can re-trigger `/plan-bridge:review-plan`.
+**Timeout:** `wait_for_status` has a default 20-minute timeout (1200 seconds). If OpenCode takes longer, the loop stops and the user can re-trigger `/plan-bridge:review-plan`.
 
 ## Slash Commands (Claude Code)
 
