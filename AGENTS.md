@@ -27,10 +27,12 @@ npm run dev          # tsx -> run src/index.ts directly
 - **Always append `.js` extensions to local imports** (required for ES modules)
   ```ts
   import { loadPlan } from "./storage.js";
+  import type { Plan, PlanStatus } from "./types.js";
   ```
 - Third-party imports do not need extensions
   ```ts
   import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+  import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
   import { z } from "zod";
   ```
 
@@ -67,6 +69,16 @@ npm run dev          # tsx -> run src/index.ts directly
 - For internal functions, return `null` for not-found cases (e.g., `loadPlan`)
 - Do not throw errors unless critical - let the MCP layer handle it
 
+### Logging
+- Use `console.error()` for all logging (MCP stdio transport)
+- Log important events with descriptive messages and emojis:
+  ```ts
+  console.error(`[plan-bridge] ✅ Plan submitted: ${plan.id} (${plan.name})`);
+  console.error(`[plan-bridge] ⏳ Waiting for status: ${plan.name}`);
+  console.error(`[plan-bridge] 🔧 Fixes submitted: ${plan.name}`);
+  ```
+- Log status transitions and key workflow events
+
 ### Async/Await
 - Use `async/await` for all asynchronous operations
 - File I/O uses sync operations from `fs` module (synchronous is acceptable here)
@@ -90,11 +102,24 @@ npm run dev          # tsx -> run src/index.ts directly
 - Always return `{ content: [{ type: "text" as const, text: JSON.stringify(...) }] }`
 - Use `const` assertion for literals: `type: "text" as const`
 
+### Server Initialization
+- Entry point: `src/index.ts`
+- Create `McpServer` instance, then `StdioServerTransport`
+- Call `ensureStorage()` before registering tools:
+  ```ts
+  const server = new McpServer({ name: "plan-bridge", version: "1.0.0" });
+  ensureStorage();
+  registerTools(server);
+  const transport = new StdioServerTransport();
+  server.connect(transport);
+  ```
+
 ### File Structure
-- `src/index.ts` - Server entry point
+- `src/index.ts` - Server entry point, initialization
 - `src/tools.ts` - MCP tool definitions (all tools in one file)
 - `src/storage.ts` - File persistence layer
 - `src/types.ts` - Type definitions
+- `build/index.cjs` - Compiled CJS bundle (output)
 
 ### Important Notes
 - **Do NOT add comments** to code unless explicitly asked

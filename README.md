@@ -83,21 +83,22 @@ See `commands/opencode/opencode-config-example.json` for the full example.
 
 ## Usage
 
-### Full-Cycle (Single Terminal)
+### Full-Cycle (Fully Automated - Single Terminal!)
 
-The simplest way to use Plan Bridge — run everything from Claude Code:
+TRUE single-terminal automation from Claude Code:
 
 1. Create a plan in Claude Code (use plan mode or describe what you want)
 2. Run `/plan-bridge:full-cycle`
+3. **That's it!** Claude Code automatically:
+   - Submits the plan
+   - Runs OpenCode to implement (synchronously)
+   - Waits for completion
+   - Reviews the code automatically
+   - Runs OpenCode to fix findings
+   - Loops until approved
+   - Reports completion
 
-That's it. Claude Code will:
-- Submit the plan
-- Trigger OpenCode to implement it (via `opencode run --command plan-bridge:get-plan`)
-- Wait for implementation to complete
-- Review the code and submit findings
-- Trigger OpenCode to fix findings (via `opencode run --command plan-bridge:claude-review`)
-- Re-review and loop until approved
-- Report completion
+**The conversation pauses while OpenCode works** (up to 10 min per step) - this is expected. No manual intervention needed!
 
 ### Two-Terminal Mode
 

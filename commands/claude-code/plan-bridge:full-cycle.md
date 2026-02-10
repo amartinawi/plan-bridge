@@ -38,17 +38,18 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
 
 ### Phase 2: Trigger OpenCode to Implement
 
-4. **Run OpenCode in background:**
-   - Execute this bash command in the background:
+4. **Run OpenCode synchronously:**
+   - Execute this bash command with a 10-minute timeout:
      ```
      cd <project_path> && opencode run --command plan-bridge:get-plan "<plan-id>"
      ```
-   - Tell the user: "OpenCode is implementing the plan. Waiting for completion..."
+   - Tell the user: "OpenCode is implementing the plan..."
+   - The conversation will wait while OpenCode works (this is normal)
 
-5. **Wait for implementation:**
-   - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 1800.
-   - If timeout: tell the user "OpenCode timed out. Check the implementation status and retry."
-   - If reached: tell the user "OpenCode finished implementing. Starting review..."
+5. **Check implementation result:**
+   - If OpenCode succeeds, it will set status to "review_requested"
+   - Tell the user: "OpenCode finished implementing. Starting review..."
+   - If OpenCode times out (>10 min), tell the user and check the plan status
 
 ### Phase 3: Automated Review Loop
 
@@ -74,17 +75,17 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
      - Report findings count and summary to the user.
      - Continue to step 9.
 
-9. **Trigger OpenCode to fix:**
-   - Execute this bash command in the background:
+9. **Run OpenCode to fix:**
+   - Execute this bash command with a 10-minute timeout:
      ```
      cd <project_path> && opencode run --command plan-bridge:claude-review "<plan-id>"
      ```
-   - Tell the user: "OpenCode is fixing [N] findings. Waiting for fixes..."
+   - Tell the user: "OpenCode is applying fixes..."
 
-10. **Wait for fixes:**
-    - Call `wait_for_status` with the plan_id, target_status "review_requested", and timeout_seconds 1800.
-    - If timeout: tell the user and stop.
-    - If reached: tell the user "OpenCode finished fixing. Re-reviewing..."
+10. **Check fix result:**
+    - If OpenCode succeeds, it will set status to "review_requested"
+    - Tell the user: "OpenCode finished fixing. Re-reviewing..."
+    - If timeout, tell the user and stop
 
 11. **Go back to step 6** and re-review.
     - Repeat this loop until the review has 0 findings (step 8 approves the plan).
@@ -99,9 +100,12 @@ Claude Code's plan mode saves plans as markdown files in `~/.claude/plans/`. Whe
     - "The full cycle is complete. All code has been implemented and reviewed."
 
 ## Important
+- **OpenCode runs synchronously** — the conversation will pause while OpenCode works (this is expected behavior)
+- Use 10-minute timeout for OpenCode commands (600000ms in Bash tool)
 - Include ALL relevant details in review findings — file paths, line numbers, function names
 - Be thorough but fair — focus on real issues, not style preferences
 - Every finding should be specific enough for OpenCode to fix without ambiguity
 - Report progress to the user at every phase transition
-- If OpenCode times out, do NOT retry automatically — ask the user
+- If OpenCode times out, do NOT retry automatically — check status and ask the user
 - The `opencode run --command` syntax is: `opencode run --command <command-name> "<argument>"`
+- TRUE single-terminal automation — no manual intervention needed!

@@ -92,16 +92,17 @@ Defined inline in `~/.config/opencode/opencode.json` under the `command` key (re
 
 ## Typical Workflow
 
-### Full-Cycle (Recommended — Single Terminal)
+### Full-Cycle (Recommended — Fully Automated!)
 1. Create a plan in Claude Code (plan mode or conversation)
-2. Run `/plan-bridge:full-cycle` — everything is automatic:
+2. Run `/plan-bridge:full-cycle`:
    - Submits the plan
-   - Triggers `opencode run --command plan-bridge:get-plan <id>` in background
-   - Waits for implementation via `wait_for_status`
-   - Reviews the code, submits findings
-   - Triggers `opencode run --command plan-bridge:claude-review <id>` in background
-   - Waits for fixes, re-reviews, loops until 0 findings
+   - **Runs OpenCode synchronously** to implement (conversation pauses ~2-10 min)
+   - Reviews the code automatically, submits findings
+   - **Runs OpenCode synchronously** to fix findings (conversation pauses)
+   - Loops until 0 findings
    - Reports completion
+
+**TRUE single-terminal automation!** The conversation pauses while OpenCode works, but everything is fully automatic. No manual intervention needed.
 
 ### Two-Terminal Flow
 1. **Claude Code:** `/plan-bridge:send-plan` → note plan ID
