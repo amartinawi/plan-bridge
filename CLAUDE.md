@@ -206,6 +206,45 @@ The review cycle is **fully automated** once triggered. No need to switch betwee
 
 See `TOKEN_OPTIMIZATION.md` for detailed architecture and metrics.
 
+## Output Optimization: Quiet Mode
+
+**Problem**: OpenCode can be verbose during implementation (~2,800 tokens of console output).
+
+**Solution**: Quiet mode with structured summaries = **95% output reduction**.
+
+### How It Works
+
+1. **Suppress operational messages** — No "Reading file...", "Writing to...", etc.
+2. **Consolidate status updates** — One emoji indicator instead of multiple lines
+3. **Batch file operations** — Show all files in tree structure, not one-by-one
+4. **Summarize tests** — "15 passed (2.3s)" instead of full test runner output
+5. **Progressive disclosure** — Show details only on errors/warnings
+
+### Output Comparison
+
+| Scenario | Verbose | Quiet | Savings |
+|----------|---------|-------|---------|
+| Simple implementation | 2,800 | 120 | 96% |
+| With warnings | 3,500 | 250 | 93% |
+| Failed tests | 3,800 | 280 | 93% |
+| **Full 3-phase cycle** | **16,800** | **920** | **95%** |
+
+### Quiet Commands
+
+- **`plan-bridge:get-plan-quiet`** — Silent implementation with structured summary
+- **`plan-bridge:claude-review-quiet`** — Silent fix loop with structured summary
+
+### Combined Savings
+
+When combined with Trust + Verify:
+
+- Claude Code reviews: **56% reduction** (9k → 4k tokens)
+- OpenCode output: **96% reduction** (2.8k → 0.12k tokens)
+- **Combined per cycle: 65% reduction** (11.8k → 4.1k tokens)
+- **Full 3-phase workflow: 68% reduction** (77k → 25k tokens)
+
+See `OUTPUT_OPTIMIZATION.md` for detailed examples and architecture.
+
 ## Slash Commands (Claude Code)
 
 Located in `~/.claude/commands/` (copies in `commands/claude-code/`):

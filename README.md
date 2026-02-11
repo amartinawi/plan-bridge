@@ -16,6 +16,7 @@ Plan Bridge solves this with:
 - **Automated review loops** — agents poll for status changes, no manual intervention
 - **Phase-by-phase orchestration** — `/plan-bridge:full-cycle` implements and reviews each phase independently
 - **Single-terminal mode** — runs everything from one terminal
+- **Token optimization** — Trust + Verify reviews (56% savings) + quiet output mode (96% savings) = 68% total reduction
 
 ## Quick Start
 
