@@ -13,6 +13,7 @@ test-app/
 
 # Plan storage (runtime data)
 .plan-bridge/
+.plans/
 
 # Auto-generated claude-mem context files (keep only root CLAUDE.md)
 **/CLAUDE.md

@@ -9,9 +9,13 @@ Built for **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** + **
 When building with AI, you often want one agent to plan and review while another implements. But coordinating between two terminals is tedious — you're constantly switching back and forth, copy-pasting plan IDs, and triggering commands manually.
 
 Plan Bridge solves this with:
+- **Local storage** — plans stored in your project at `<project>/.plans/`, not global directories
+- **Inline plan creation** — create plans directly in conversation, no need for plan mode
+- **Automatic phase splitting** — complex plans split into manageable phases with independent review cycles
 - **Shared MCP server** — both agents read/write the same plan files
 - **Automated review loops** — agents poll for status changes, no manual intervention
-- **Single-terminal mode** — `/plan-bridge:full-cycle` runs everything from one terminal
+- **Phase-by-phase orchestration** — `/plan-bridge:full-cycle` implements and reviews each phase independently
+- **Single-terminal mode** — runs everything from one terminal
 
 ## Quick Start
 
@@ -87,18 +91,26 @@ See `commands/opencode/opencode-config-example.json` for the full example.
 
 TRUE single-terminal automation from Claude Code:
 
-1. Create a plan in Claude Code (use plan mode or describe what you want)
+1. Describe what you want to build in conversation (or use plan mode)
 2. Run `/plan-bridge:full-cycle`
 3. **That's it!** Claude Code automatically:
-   - Submits the plan
-   - Runs OpenCode to implement (synchronously)
-   - Waits for completion
-   - Reviews the code automatically
-   - Runs OpenCode to fix findings
-   - Loops until approved
+   - Analyzes plan complexity (score 0-100)
+   - Splits into phases if complex (score ≥50 or 5+ files)
+   - Submits the plan to local storage (`<project>/.plans/<id>/`)
+   - For each phase (or single implementation if simple):
+     - Runs OpenCode to implement (synchronously)
+     - Reviews the code automatically
+     - Runs OpenCode to fix findings
+     - Loops until phase approved
+     - Advances to next phase
    - Reports completion
 
 **The conversation pauses while OpenCode works** (up to 10 min per step) - this is expected. No manual intervention needed!
+
+**Complex plans** are automatically split into phases:
+- Each phase is implemented, reviewed, and approved independently
+- Reduces overwhelming review cycles
+- Manageable incremental progress
 
 ### Two-Terminal Mode
 
@@ -131,19 +143,32 @@ Both auto-loop via `wait_for_status` — no further intervention needed.
 
 ## MCP Tools
 
-9 tools available to both agents:
+15 tools available to both agents:
+
+### Core Workflow Tools
 
 | Tool | Purpose |
 |------|---------|
-| `submit_plan` | Create a new plan |
+| `submit_plan` | Create a simple plan (legacy) |
+| `submit_phased_plan` | Create a plan with automatic complexity analysis and phase splitting (RECOMMENDED) |
 | `get_plan` | Get plan by ID or latest by status |
-| `list_plans` | List plans (filter by status, project_path) |
+| `list_plans` | List plans (filter by status, project_path, storage_mode) |
 | `update_plan_status` | Change plan status |
-| `submit_review` | Submit findings (empty = approved) |
-| `get_review` | Get latest review for a plan |
-| `submit_fix_report` | Report fixes (auto-sets review_requested) |
+| `submit_review` | Submit findings (empty = approved, phase-aware) |
+| `get_review` | Get latest review for plan or current phase |
+| `submit_fix_report` | Report fixes (auto-sets review_requested, phase-aware) |
 | `mark_complete` | Force-complete a plan |
 | `wait_for_status` | Poll until target status reached |
+
+### Complexity & Phase Management
+
+| Tool | Purpose |
+|------|---------|
+| `analyze_plan_complexity` | Analyze plan content and get phase recommendations |
+| `get_current_phase` | Get the active phase for a phased plan |
+| `list_plan_phases` | List all phases with status summary |
+| `advance_to_next_phase` | Mark current phase complete and advance to next |
+| `migrate_plan_to_local` | Migrate a global plan to local storage |
 
 ## How It Works
 
@@ -171,7 +196,66 @@ Both auto-loop via `wait_for_status` — no further intervention needed.
               review_requested → ... → completed
 ```
 
-Plans are stored as JSON files in `~/.plan-bridge/plans/`. Each agent spawns its own MCP server process (stdio transport), but they share state through the filesystem.
+**Storage:**
+- **New plans** (default): Local storage at `<project>/.plans/<plan-id>/`
+  - `plan.json` — Metadata, reviews, fixes
+  - `plan.md` — Original markdown content
+  - `CLAUDE.md` — Auto-generated project context
+  - `phases/` — Individual phase files (if phased)
+- **Legacy plans**: Global storage at `~/.plan-bridge/plans/` (backward compatible)
+
+Each agent spawns its own MCP server process (stdio transport), but they share state through the filesystem.
+
+## Local Storage & Phase Management
+
+### Local Storage
+
+Plans are now stored locally within your project:
+
+```
+<project>/
+  .plans/
+    <plan-id>/
+      ├── plan.json          # Full plan metadata
+      ├── plan.md            # Original content
+      ├── CLAUDE.md          # Auto-generated context
+      └── phases/            # Phase files (if complex)
+          ├── phase-1.json
+          ├── phase-1.md
+          ├── phase-2.json
+          └── phase-2.md
+```
+
+Benefits:
+- Plans live with the code they describe
+- Easy to inspect and track in git (add `.plans/` to `.gitignore`)
+- No global pollution
+- Multi-project support
+
+### Automatic Phase Splitting
+
+Complex plans are automatically split into phases when:
+- Complexity score ≥ 50, OR
+- 5+ files referenced in plan
+
+Complexity indicators:
+- Number of files
+- Estimated implementation steps
+- Explicit phase markers (## Phase 1, ## Step 1)
+- Dependency keywords
+
+**Phase workflow:**
+1. Phase 1 implemented → reviewed → fixed → approved
+2. Advance to Phase 2
+3. Phase 2 implemented → reviewed → fixed → approved
+4. ...repeat until all phases complete
+5. Plan marked completed
+
+**Why phases?**
+- Reduces overwhelming review cycles
+- Focuses implementation on manageable chunks
+- Each phase gets independent review
+- Clear progress tracking
 
 ## Project Structure
 
